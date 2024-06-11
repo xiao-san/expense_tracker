@@ -2,7 +2,6 @@ import 'package:expense_tracker/add_expense/add_expenses.dart';
 import 'package:expense_tracker/expense_list/expense_list.dart';
 import 'package:expense_tracker/model/expense.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -36,13 +35,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   void removeExpenses(Expense expenses) {
+    final expenseIndex = _registerdExpenses.indexOf(expenses);
     setState(() {
       _registerdExpenses.remove(expenses);
     });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 2),
+      content: const Text(
+        'Expenses is deleted successfully',
+      ),
+      action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              _registerdExpenses.insert(expenseIndex, expenses);
+            });
+          }),
+    ));
   }
 
   void _addExpensesPage() {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       builder: (context) {
         return AddExpensesPage(
@@ -64,17 +81,19 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const Text('Chart'),
-          Expanded(
-            child: ExpenseList(
-              expensesList: _registerdExpenses,
-              removeExpenses: removeExpenses,
+      body: _registerdExpenses.isEmpty
+          ? const Center(child: Text('No Expenses Found, add some!!'))
+          : Column(
+              children: [
+                const Text('Chart'),
+                Expanded(
+                  child: ExpenseList(
+                    expensesList: _registerdExpenses,
+                    removeExpenses: removeExpenses,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
